@@ -52,9 +52,20 @@ class MazeSolver(object):
         return range(y_start, y_end), range(x_start, x_end)
 
     def collect_nodes(self, coordinates, visited=[]):
+        neighbors = self.check_neighbors(coordinates, visited)
+
+        if neighbors:
+            self.queue.append(neighbors.popleft())
+        else:
+            return
+
+        for neighbor in neighbors:
+            self.queue.appendleft(neighbor)
+
+    def check_neighbors(self, coordinates, visited=[]):
         y, x = coordinates
         range_y, range_x = self.get_ranges(coordinates)
-        _next = None
+        neighbors = deque()
 
         for _y in range_y:
             for _x in range_x:
@@ -65,11 +76,8 @@ class MazeSolver(object):
                     and _coordinates not in visited
                     and _coordinates not in self.queue
                 ):
-                    if not _next:
-                        _next = _coordinates
-                        self.queue.append(_coordinates)
-                    else:
-                        self.queue.appendleft(_coordinates)
+                    neighbors.append(_coordinates)
+        return neighbors
 
     def create_matrix(self):
         return [list(s) for s in re.split(r'\n', self.maze)]
