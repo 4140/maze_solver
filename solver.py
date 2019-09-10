@@ -25,23 +25,23 @@ class MazeSolver(object):
         self.target = target
 
         self.matrix = self.create_matrix()
+        self.queue = deque()
 
     def solver(self):
-        queue = deque()
-        queue.extendleft(self.collect_nodes(self.start))
+        self.queue.extendleft(self.collect_nodes(self.start))
         visited = []
         coordinates = self.start
 
-        while queue:
+        while self.queue:
             nodes = self.collect_nodes(coordinates, visited)
-            queue.extendleft(nodes)
+            self.queue.extendleft(nodes)
             self.matrix[coordinates[0]][coordinates[1]] = '.'
 
             if coordinates == self.target:
                 return visited
 
             visited.append(coordinates)
-            coordinates = queue.popleft()
+            coordinates = self.queue.popleft()
 
         return ':-('
 
