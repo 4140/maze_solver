@@ -26,22 +26,20 @@ class MazeSolver(object):
 
         self.matrix = self.create_matrix()
         self.queue = deque()
+        self.queue.append(self.start)
 
     def solver(self):
-        self.collect_nodes(self.start)
         visited = []
-        coordinates = self.start
 
         while self.queue:
-            self.collect_nodes(coordinates, visited)
-            self.matrix[coordinates[0]][coordinates[1]] = '.'
+            coordinates = self.queue.pop()
+            visited.append(coordinates)
+            self.matrix[coordinates[0]][coordinates[1]] = len(visited)
 
             if coordinates == self.target:
                 return visited
 
-            visited.append(coordinates)
-            coordinates = self.queue.popleft()
-
+            self.collect_nodes(coordinates, visited)
         return ':-('
 
     def get_ranges(self, coordinates):
@@ -56,15 +54,22 @@ class MazeSolver(object):
     def collect_nodes(self, coordinates, visited=[]):
         y, x = coordinates
         range_y, range_x = self.get_ranges(coordinates)
+        _next = None
 
         for _y in range_y:
             for _x in range_x:
+                _coordinates = (_y, _x)
                 if (
                     xor(y == _y, x == _x)
                     and self.matrix[_y][_x] != '#'
-                    and (_y, _x) not in visited
+                    and _coordinates not in visited
+                    and _coordinates not in self.queue
                 ):
-                    self.queue.appendleft((_y, _x))
+                    if not _next:
+                        _next = _coordinates
+                        self.queue.append(_coordinates)
+                    else:
+                        self.queue.appendleft(_coordinates)
 
     def create_matrix(self):
         return [list(s) for s in re.split(r'\n', self.maze)]
