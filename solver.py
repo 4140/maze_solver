@@ -59,8 +59,7 @@ class MazeSolver(object):
         else:
             return
 
-        for neighbor in neighbors:
-            self.queue.appendleft(neighbor)
+        self.queue.extendleft(neighbors)
 
     def check_neighbors(self, coordinates, visited=[]):
         y, x = coordinates
