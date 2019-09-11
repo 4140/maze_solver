@@ -1,6 +1,5 @@
 import re
 from collections import deque
-from operator import xor
 
 maze = """
 ###########
@@ -17,6 +16,149 @@ maze = """
 """
 
 
+class Tree(object):
+
+    def __init__(self, matrix, target):
+        self.matrix = matrix
+        self.target = target
+
+        self.nodes = {}
+        self.target_nodes = []
+        self.root_node = None
+        self.correct_paths = []
+
+    def get_correct_paths(self):
+        self.build_tree()
+        for node in self.target_nodes:
+            path = [parent.coordinates for parent in node]
+            self.correct_paths.append(reversed(path))
+
+    def get_node(self, coordinates, parent_node):
+        if isinstance(parent_node, tuple):
+            parent_coordinates = parent_node
+        elif isinstance(parent_node, Node):
+            parent_coordinates = parent_node.coordinates
+        else:
+            parent_coordinates = None
+
+        return self.nodes.get((coordinates, parent_coordinates))
+
+    def add_node(self, node):
+        node_repr = node.coordinates
+        if node.parent_node:
+            parent_node_repr = node.parent_node.coordinates
+        else:
+            parent_node_repr = None
+
+        if not self.nodes.get((node_repr, parent_node_repr)):
+            self.nodes[(node_repr, parent_node_repr)] = node
+        else:
+            print(f'COLISION: {(node_repr, parent_node_repr)}')
+
+        if not node.parent_node:
+            self.add_root(node)
+        if node.coordinates == self.target:
+            self.target_nodes.append(node)
+
+    def create_node(self, *args, **kwargs):
+        try:
+            node = Node(*args, **kwargs)
+            self.add_node(node)
+            return node
+        except Exception as e:
+            print(e)
+
+    def add_root(self, node):
+        if not self.root_node:
+            self.root_node = node
+        else:
+            print(f'COLISION root: {(node.coordinates, node.parent_node)}')
+
+    def build_tree(self):
+        queue = deque(self.root_node.get_children())
+
+        while queue:
+            node = queue.pop()
+            queue.extend(node.get_children())
+
+    @property
+    def shortest_path(self):
+        return sorted(self.correct_paths, key=lambda l: len(l))[0]
+
+    @property
+    def longest_path(self):
+        return sorted(self.correct_paths, key=lambda l: len(l))[-1]
+
+
+class Node(object):
+    def __init__(
+        self,
+        coordinates,
+        tree,
+        root_node=None,
+        parent_node=None,
+        is_visited=False,
+    ):
+        if tree.get_node(coordinates, parent_node):
+            raise Exception(f'COLISION init: {(coordinates, parent_node)}')
+
+        self.coordinates = coordinates
+        self.tree = tree
+        self.root_node = root_node or self
+        self.parent_node = parent_node
+        self.is_visited = is_visited
+
+        self.is_target = self.coordinates == self.tree.target
+        self.is_root = not parent_node
+
+        self.iter_next = self
+
+    def __str__(self):
+        return str(self.coordinates)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.iter_next:
+            _next = self.iter_next
+            self.iter_next = _next.parent_node
+            return _next
+        else:
+            raise StopIteration
+
+    def get_children(self):
+        children = []
+
+        def get_child_node(y, x):
+            try:
+                cell = self.tree.matrix[y][x]
+                if (
+                    cell != '#'
+                    and not self.tree.get_node((y, x), self)
+                ):
+                    node = self.tree.create_node(
+                        (y, x),
+                        self.tree,
+                        root_node=self.root_node,
+                        parent_node=self,
+                    )
+                    return node
+            except IndexError:
+                return
+
+        y, x = self.coordinates
+        for _y in (y - 1, y + 1):
+            node = get_child_node(_y, x)
+            if node:
+                children.append(node)
+        for _x in (x - 1, x + 1):
+            node = get_child_node(y, _x)
+            if node:
+                children.append(node)
+        return children
+
+
 class MazeSolver(object):
 
     def __init__(self, start, target, maze):
@@ -25,58 +167,11 @@ class MazeSolver(object):
         self.target = target
 
         self.matrix = self.create_matrix()
-        self.queue = deque()
-        self.queue.append(self.start)
+        self.tree = Tree(self.matrix, self.target)
+        self.tree.create_node(self.start, self.tree)
 
     def solver(self):
-        visited = []
-
-        while self.queue:
-            coordinates = self.queue.pop()
-            visited.append(coordinates)
-            self.matrix[coordinates[0]][coordinates[1]] = len(visited)
-
-            if coordinates == self.target:
-                return visited
-
-            self.collect_nodes(coordinates, visited)
-        return ':-('
-
-    def get_ranges(self, coordinates):
-        y, x = coordinates
-        y_start = y - 1 if y > 0 else y
-        x_start = x - 1 if x > 0 else x
-        y_end = y + 2 if y + 1 < len(self.matrix) else y + 1
-        x_end = x + 2 if x + 1 < len(self.matrix[0]) else x + 1
-
-        return range(y_start, y_end), range(x_start, x_end)
-
-    def collect_nodes(self, coordinates, visited=[]):
-        neighbors = self.check_neighbors(coordinates, visited)
-
-        if neighbors:
-            self.queue.append(neighbors.popleft())
-        else:
-            return
-
-        self.queue.extendleft(neighbors)
-
-    def check_neighbors(self, coordinates, visited=[]):
-        y, x = coordinates
-        range_y, range_x = self.get_ranges(coordinates)
-        neighbors = deque()
-
-        for _y in range_y:
-            for _x in range_x:
-                _coordinates = (_y, _x)
-                if (
-                    xor(y == _y, x == _x)
-                    and self.matrix[_y][_x] != '#'
-                    and _coordinates not in visited
-                    and _coordinates not in self.queue
-                ):
-                    neighbors.append(_coordinates)
-        return neighbors
+        return self.tree.get_correct_paths()
 
     def create_matrix(self):
         return [list(s) for s in re.split(r'\n', self.maze)]
