@@ -133,19 +133,19 @@ class Node(object):
         def get_child_node(y, x):
             try:
                 cell = self.tree.matrix[y][x]
-                if (
-                    cell != '#'
-                    and not self.tree.get_node((y, x), self)
-                ):
-                    node = self.tree.create_node(
-                        (y, x),
-                        self.tree,
-                        root_node=self.root_node,
-                        parent_node=self,
-                    )
-                    return node
             except IndexError:
                 return
+            if (
+                cell != '#'
+                and not self.tree.get_node((y, x), self)
+            ):
+                node = self.tree.create_node(
+                    (y, x),
+                    self.tree,
+                    root_node=self.root_node,
+                    parent_node=self,
+                )
+                return node
 
         y, x = self.coordinates
         for _y in (y - 1, y + 1):
