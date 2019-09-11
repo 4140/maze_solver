@@ -138,6 +138,10 @@ class Node(object):
             if (
                 cell != '#'
                 and not self.tree.get_node((y, x), self)
+                and not (
+                    self.parent_node
+                    and ((y, x) == self.parent_node.coordinates)
+                )
             ):
                 node = self.tree.create_node(
                     (y, x),
