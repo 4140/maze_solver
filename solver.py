@@ -25,6 +25,7 @@ class Tree(object):
         self.nodes = {}
         self.target_nodes = []
         self.root_node = None
+        self.paths = []
         self.correct_paths = []
 
     def get_correct_paths(self):
@@ -60,13 +61,19 @@ class Tree(object):
         if node.coordinates == self.target:
             self.target_nodes.append(node)
 
-    def create_node(self, *args, **kwargs):
-        try:
-            node = Node(*args, **kwargs)
+    def create_node(self, coordinates, tree, parent_node=None, **kwargs):
+        if parent_node:
+            parent_node_repr = parent_node.coordinates
+        else:
+            parent_node_repr = None
+
+        if not (
+            self.get_node(coordinates, parent_node_repr)
+            or self.get_node(parent_node_repr, coordinates)
+        ):
+            node = Node(coordinates, tree, parent_node, **kwargs)
             self.add_node(node)
             return node
-        except Exception as e:
-            print(e)
 
     def add_root(self, node):
         if not self.root_node:
@@ -95,18 +102,13 @@ class Node(object):
         self,
         coordinates,
         tree,
-        root_node=None,
         parent_node=None,
-        is_visited=False,
+        root_node=None,
     ):
-        if tree.get_node(coordinates, parent_node):
-            raise Exception(f'COLISION init: {(coordinates, parent_node)}')
-
         self.coordinates = coordinates
         self.tree = tree
         self.root_node = root_node or self
         self.parent_node = parent_node
-        self.is_visited = is_visited
 
         self.is_target = self.coordinates == self.tree.target
         self.is_root = not parent_node
@@ -135,14 +137,7 @@ class Node(object):
                 cell = self.tree.matrix[y][x]
             except IndexError:
                 return
-            if (
-                cell != '#'
-                and not self.tree.get_node((y, x), self)
-                and not (
-                    self.parent_node
-                    and ((y, x) == self.parent_node.coordinates)
-                )
-            ):
+            if cell != '#':
                 node = self.tree.create_node(
                     (y, x),
                     self.tree,
