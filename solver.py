@@ -32,7 +32,7 @@ class Tree(object):
         self.build_tree()
         for node in self.target_nodes:
             path = [parent.coordinates for parent in node]
-            self.correct_paths.append(reversed(path))
+            self.correct_paths.append(path[::-1])
 
     def get_node(self, coordinates, parent_node):
         if isinstance(parent_node, tuple):
