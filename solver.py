@@ -130,8 +130,6 @@ class Node(object):
             raise StopIteration
 
     def get_children(self):
-        children = []
-
         def get_child_node(y, x):
             try:
                 cell = self.tree.matrix[y][x]
@@ -150,12 +148,11 @@ class Node(object):
         for _y in (y - 1, y + 1):
             node = get_child_node(_y, x)
             if node:
-                children.append(node)
+                yield node
         for _x in (x - 1, x + 1):
             node = get_child_node(y, _x)
             if node:
-                children.append(node)
-        return children
+                yield node
 
 
 class MazeSolver(object):
