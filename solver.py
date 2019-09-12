@@ -97,63 +97,6 @@ class Tree(object):
         return sorted(self.correct_paths, key=lambda l: len(l))[-1]
 
 
-class Node(object):
-    def __init__(
-        self,
-        coordinates,
-        tree,
-        parent_node=None,
-        root_node=None,
-    ):
-        self.coordinates = coordinates
-        self.tree = tree
-        self.root_node = root_node or self
-        self.parent_node = parent_node
-
-        self.is_target = self.coordinates == self.tree.target
-        self.is_root = not parent_node
-
-        self.iter_next = self
-
-    def __str__(self):
-        return str(self.coordinates)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.iter_next:
-            _next = self.iter_next
-            self.iter_next = _next.parent_node
-            return _next
-        else:
-            raise StopIteration
-
-    def get_children(self):
-        def get_child_node(y, x):
-            try:
-                cell = self.tree.matrix[y][x]
-            except IndexError:
-                return
-            if cell != '#':
-                node = self.tree.create_node(
-                    (y, x),
-                    self.tree,
-                    root_node=self.root_node,
-                    parent_node=self,
-                )
-                return node
-
-        y, x = self.coordinates
-        for _y in (y - 1, y + 1):
-            node = get_child_node(_y, x)
-            if node:
-                yield node
-        for _x in (x - 1, x + 1):
-            node = get_child_node(y, _x)
-            if node:
-                yield node
-
 
 class MazeSolver(object):
 
