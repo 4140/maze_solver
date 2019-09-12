@@ -62,14 +62,14 @@ class Tree(object):
             self.target_nodes.append(node)
 
     def create_node(self, coordinates, tree, parent_node=None, **kwargs):
-        if parent_node:
-            parent_node_repr = parent_node.coordinates
-        else:
-            parent_node_repr = None
 
         if not (
-            self.get_node(coordinates, parent_node_repr)
-            or self.get_node(parent_node_repr, coordinates)
+            self.get_node(coordinates, parent_node)
+            or (
+                parent_node
+                and parent_node.parent_node
+                and parent_node.parent_node.coordinates == coordinates
+            )
         ):
             node = Node(coordinates, tree, parent_node, **kwargs)
             self.add_node(node)
