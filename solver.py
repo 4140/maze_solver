@@ -22,8 +22,6 @@ class Tree(object):
         self.matrix = matrix
         self.target = target
 
-        self.nodes = {}
-        self.target_nodes = []
         self.root_node = None
         self.paths = []
         self.correct_paths = []
@@ -42,51 +40,25 @@ class Tree(object):
         else:
             parent_coordinates = None
 
-        return self.nodes.get((coordinates, parent_coordinates))
+    def get_next_coordinates(self, coordinates):
+        def check_cell(y, x):
+            try:
+                cell = self.tree.matrix[y][x]
+            except IndexError:
+                return
+            if cell != '#':
 
-    def add_node(self, node):
-        node_repr = node.coordinates
-        if node.parent_node:
-            parent_node_repr = node.parent_node.coordinates
-        else:
-            parent_node_repr = None
+                return coordinates
 
-        if not self.nodes.get((node_repr, parent_node_repr)):
-            self.nodes[(node_repr, parent_node_repr)] = node
-        else:
-            print(f'COLISION: {(node_repr, parent_node_repr)}')
-
-        if not node.parent_node:
-            self.add_root(node)
-        if node.coordinates == self.target:
-            self.target_nodes.append(node)
-
-    def create_node(self, coordinates, tree, parent_node=None, **kwargs):
-
-        if not (
-            self.get_node(coordinates, parent_node)
-            or (
-                parent_node
-                and parent_node.parent_node
-                and parent_node.parent_node.coordinates == coordinates
-            )
-        ):
-            node = Node(coordinates, tree, parent_node, **kwargs)
-            self.add_node(node)
-            return node
-
-    def add_root(self, node):
-        if not self.root_node:
-            self.root_node = node
-        else:
-            print(f'COLISION root: {(node.coordinates, node.parent_node)}')
-
-    def build_tree(self):
-        queue = deque(self.root_node.get_children())
-
-        while queue:
-            node = queue.pop()
-            queue.extend(node.get_children())
+        y, x = coordinates
+        for _y in (y - 1, y + 1):
+            next_coordinates = check_cell(_y, x)
+            if next_coordinates:
+                yield next_coordinates
+        for _x in (x - 1, x + 1):
+            next_coordinates = check_cell(y, _x)
+            if next_coordinates:
+                yield next_coordinates
 
     @property
     def shortest_path(self):
@@ -107,7 +79,6 @@ class MazeSolver(object):
 
         self.matrix = self.create_matrix()
         self.tree = Tree(self.matrix, self.target)
-        self.tree.create_node(self.start, self.tree)
 
     def solver(self):
         return self.tree.get_correct_paths()
