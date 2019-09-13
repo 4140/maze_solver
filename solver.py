@@ -17,8 +17,14 @@ maze = """
 
 
 class Tree(object):
+    """
+    Tree object building and containing paths.
+    """
 
     def __init__(self, matrix, start, target):
+        """
+        Initiate instance attributes.
+        """
         self.matrix = matrix
         self.start = start
         self.target = target
@@ -29,6 +35,11 @@ class Tree(object):
         self.explore_paths([self.start])
 
     def explore_paths(self, current_path):
+        """
+        Explore possible paths from self.start to self.target.
+
+        Called recursively until no options to start a new path are left.
+        """
         if not current_path:
             return
 
@@ -63,6 +74,9 @@ class Tree(object):
             self.backtrack(current_path)
 
     def get_available(self, coordinates):
+        """
+        Return next_coordinates and other available options for coordinates.
+        """
         if coordinates in self.forks:
             available = self.forks[coordinates]
             next_coordinates = available.popleft()
@@ -77,6 +91,9 @@ class Tree(object):
         return available, next_coordinates
 
     def backtrack(self, current_path):
+        """
+        Go back to previous available fork in current_path.
+        """
         index = 0
         for c in reversed(current_path):
             if c in self.forks:
@@ -87,7 +104,13 @@ class Tree(object):
         self.explore_paths(current_path[0:index+1])
 
     def get_next_coordinates(self, coordinates):
+        """
+        Get possible next coordinates for given coordinates.
+        """
         def check_cell(y, x):
+            """
+            Check if a cell in self.matrix is blocked or open.
+            """
             try:
                 cell = self.matrix[y][x]
             except IndexError:
