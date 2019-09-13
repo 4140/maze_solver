@@ -1,4 +1,5 @@
 import re
+from collections import deque
 
 maze = """
 ###########
@@ -24,7 +25,7 @@ class Tree(object):
 
         self.correct_paths = []
         self.deadends = []
-        self.generators = {}
+        self.forks = {}
 
         self.explore_paths([self.start])
 
@@ -34,26 +35,52 @@ class Tree(object):
 
         coordinates = current_path[-1]
 
-        if coordinates not in self.generators:
-            self.generators[coordinates] = self.get_next_coordinates(
-                coordinates
-            )
-        gen = self.generators.get(coordinates)
-        next_coordinates = next(gen, None)
+        if coordinates in self.forks:
+            available = self.forks[coordinates]
+            next_coordinates = available.popleft()
+            if not available:
+                del self.forks[coordinates]
+        else:
+            available = self.get_next_coordinates(coordinates)
+            next_coordinates = available.popleft()
+            if available:
+                self.forks[coordinates] = available
 
-        if next_coordinates and next_coordinates in self.generators.keys():
-            # try next coordinates from generator
+        if (
+            next_coordinates
+            and next_coordinates in current_path
+            and available
+        ):
+            # try next coordinates from queue for coordinates
+            # import ipdb; ipdb.set_trace()
             self.explore_paths(current_path)
-        elif next_coordinates and next_coordinates != self.target:
+        elif (
+            next_coordinates
+            and next_coordinates not in current_path
+            and next_coordinates != self.target
+        ):
             current_path.append(next_coordinates)
             self.explore_paths(current_path)
         elif next_coordinates and next_coordinates == self.target:
             current_path.append(next_coordinates)
             self.correct_paths.append(current_path)
-            self.explore_paths(current_path[0:-1])
+            index = 0
+            for c in reversed(current_path):
+                if c in self.forks:
+                    index = current_path.index(c)
+                    break
+            if not index:
+                return
+            self.explore_paths(current_path[0:index+1])
         else:
-            self.deadends.append(coordinates)
-            self.explore_paths(current_path[0:-1])
+            index = 0
+            for c in reversed(current_path):
+                if c in self.forks:
+                    index = current_path.index(c)
+                    break
+            if not index:
+                return
+            self.explore_paths(current_path[0:index+1])
 
     def get_next_coordinates(self, coordinates):
         def check_cell(y, x):
@@ -69,14 +96,17 @@ class Tree(object):
                 return (y, x)
 
         y, x = coordinates
+        next_coordinates_list = deque()
         for _y in (y - 1, y + 1):
             next_coordinates = check_cell(_y, x)
             if next_coordinates:
-                yield next_coordinates
+                next_coordinates_list.append(next_coordinates)
         for _x in (x - 1, x + 1):
             next_coordinates = check_cell(y, _x)
             if next_coordinates:
-                yield next_coordinates
+                next_coordinates_list.append(next_coordinates)
+
+        return next_coordinates_list
 
     @property
     def shortest_path(self):
