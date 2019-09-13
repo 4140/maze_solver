@@ -33,7 +33,33 @@ class Tree(object):
             return
 
         coordinates = current_path[-1]
+        available, next_coordinates = self.get_available(coordinates)
 
+        if (
+            next_coordinates
+            and next_coordinates in current_path
+            and available
+        ):
+            # try next coordinates from queue for coordinates
+            self.explore_paths(current_path)
+
+        elif (
+            next_coordinates
+            and next_coordinates not in current_path
+            and next_coordinates != self.target
+        ):
+            current_path.append(next_coordinates)
+            self.explore_paths(current_path)
+
+        elif next_coordinates and next_coordinates == self.target:
+            current_path.append(next_coordinates)
+            self.correct_paths.append(current_path)
+            self.backtrack(current_path)
+
+        else:
+            self.backtrack(current_path)
+
+    def get_available(self, coordinates):
         if coordinates in self.forks:
             available = self.forks[coordinates]
             next_coordinates = available.popleft()
@@ -45,27 +71,7 @@ class Tree(object):
             if available:
                 self.forks[coordinates] = available
 
-        if (
-            next_coordinates
-            and next_coordinates in current_path
-            and available
-        ):
-            # try next coordinates from queue for coordinates
-            self.explore_paths(current_path)
-        elif (
-            next_coordinates
-            and next_coordinates not in current_path
-            and next_coordinates != self.target
-        ):
-            current_path.append(next_coordinates)
-            self.explore_paths(current_path)
-        elif next_coordinates and next_coordinates == self.target:
-            current_path.append(next_coordinates)
-            self.correct_paths.append(current_path)
-            self.backtrack(current_path)
-
-        else:
-            self.backtrack(current_path)
+        return available, next_coordinates
 
     def backtrack(self, current_path):
         index = 0
