@@ -1,5 +1,4 @@
 import re
-from collections import deque
 
 maze = """
 ###########
@@ -18,37 +17,57 @@ maze = """
 
 class Tree(object):
 
-    def __init__(self, matrix, target):
+    def __init__(self, matrix, start, target):
         self.matrix = matrix
+        self.start = start
         self.target = target
 
-        self.root_node = None
-        self.paths = []
         self.correct_paths = []
+        self.deadends = []
+        self.generators = {}
 
-    def get_correct_paths(self):
-        self.build_tree()
-        for node in self.target_nodes:
-            path = [parent.coordinates for parent in node]
-            self.correct_paths.append(path[::-1])
+        self.explore_paths([self.start])
 
-    def get_node(self, coordinates, parent_node):
-        if isinstance(parent_node, tuple):
-            parent_coordinates = parent_node
-        elif isinstance(parent_node, Node):
-            parent_coordinates = parent_node.coordinates
+    def explore_paths(self, current_path, explored=[]):
+        if not current_path:
+            return
+
+        coordinates = current_path[-1]
+        explored.append(coordinates)
+
+        if coordinates not in self.generators:
+            self.generators[coordinates] = self.get_next_coordinates(
+                coordinates
+            )
+        gen = self.generators.get(coordinates)
+        next_coordinates = next(gen, None)
+
+        if next_coordinates and next_coordinates in explored:
+            # try next coordinates from generator
+            self.explore_paths(current_path, explored)
+        elif next_coordinates and next_coordinates != self.target:
+            current_path.append(next_coordinates)
+            self.explore_paths(current_path, explored)
+        elif next_coordinates and next_coordinates == self.target:
+            current_path.append(next_coordinates)
+            self.correct_paths.append(current_path)
+            self.explore_paths(current_path[0:-1], explored)
         else:
-            parent_coordinates = None
+            self.deadends.append(coordinates)
+            self.explore_paths(current_path[0:-1], explored)
 
     def get_next_coordinates(self, coordinates):
         def check_cell(y, x):
             try:
-                cell = self.tree.matrix[y][x]
+                cell = self.matrix[y][x]
             except IndexError:
                 return
-            if cell != '#':
+            if (
+                cell != '#'
+                and not (y, x) in self.deadends
+            ):
 
-                return coordinates
+                return (y, x)
 
         y, x = coordinates
         for _y in (y - 1, y + 1):
@@ -69,7 +88,6 @@ class Tree(object):
         return sorted(self.correct_paths, key=lambda l: len(l))[-1]
 
 
-
 class MazeSolver(object):
 
     def __init__(self, start, target, maze):
@@ -78,10 +96,7 @@ class MazeSolver(object):
         self.target = target
 
         self.matrix = self.create_matrix()
-        self.tree = Tree(self.matrix, self.target)
-
-    def solver(self):
-        return self.tree.get_correct_paths()
+        self.tree = Tree(self.matrix, self.start, self.target)
 
     def create_matrix(self):
         return [list(s) for s in re.split(r'\n', self.maze)]
