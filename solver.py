@@ -52,7 +52,6 @@ class Tree(object):
             and available
         ):
             # try next coordinates from queue for coordinates
-            # import ipdb; ipdb.set_trace()
             self.explore_paths(current_path)
         elif (
             next_coordinates
@@ -64,23 +63,20 @@ class Tree(object):
         elif next_coordinates and next_coordinates == self.target:
             current_path.append(next_coordinates)
             self.correct_paths.append(current_path)
-            index = 0
-            for c in reversed(current_path):
-                if c in self.forks:
-                    index = current_path.index(c)
-                    break
-            if not index:
-                return
-            self.explore_paths(current_path[0:index+1])
+            self.backtrack(current_path)
+
         else:
-            index = 0
-            for c in reversed(current_path):
-                if c in self.forks:
-                    index = current_path.index(c)
-                    break
-            if not index:
-                return
-            self.explore_paths(current_path[0:index+1])
+            self.backtrack(current_path)
+
+    def backtrack(self, current_path):
+        index = 0
+        for c in reversed(current_path):
+            if c in self.forks:
+                index = current_path.index(c)
+                break
+        if not index:
+            return
+        self.explore_paths(current_path[0:index+1])
 
     def get_next_coordinates(self, coordinates):
         def check_cell(y, x):
