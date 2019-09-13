@@ -48,15 +48,18 @@ class Tree(object):
             and next_coordinates not in current_path
             and next_coordinates != self.target
         ):
+            # continue on path
             current_path.append(next_coordinates)
             self.explore_paths(current_path)
 
         elif next_coordinates and next_coordinates == self.target:
+            # save path and backtrack to start a new one
             current_path.append(next_coordinates)
             self.correct_paths.append(current_path)
             self.backtrack(current_path)
 
         else:
+            # backtrack to search for a new path
             self.backtrack(current_path)
 
     def get_available(self, coordinates):
@@ -94,10 +97,12 @@ class Tree(object):
 
         y, x = coordinates
         next_coordinates_queue = deque()
+
         for _y in (y - 1, y + 1):
             next_coordinates = check_cell(_y, x)
             if next_coordinates:
                 next_coordinates_queue.append(next_coordinates)
+
         for _x in (x - 1, x + 1):
             next_coordinates = check_cell(y, _x)
             if next_coordinates:
