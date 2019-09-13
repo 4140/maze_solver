@@ -28,12 +28,11 @@ class Tree(object):
 
         self.explore_paths([self.start])
 
-    def explore_paths(self, current_path, explored=[]):
+    def explore_paths(self, current_path):
         if not current_path:
             return
 
         coordinates = current_path[-1]
-        explored.append(coordinates)
 
         if coordinates not in self.generators:
             self.generators[coordinates] = self.get_next_coordinates(
@@ -42,19 +41,19 @@ class Tree(object):
         gen = self.generators.get(coordinates)
         next_coordinates = next(gen, None)
 
-        if next_coordinates and next_coordinates in explored:
+        if next_coordinates and next_coordinates in self.generators.keys():
             # try next coordinates from generator
-            self.explore_paths(current_path, explored)
+            self.explore_paths(current_path)
         elif next_coordinates and next_coordinates != self.target:
             current_path.append(next_coordinates)
-            self.explore_paths(current_path, explored)
+            self.explore_paths(current_path)
         elif next_coordinates and next_coordinates == self.target:
             current_path.append(next_coordinates)
             self.correct_paths.append(current_path)
-            self.explore_paths(current_path[0:-1], explored)
+            self.explore_paths(current_path[0:-1])
         else:
             self.deadends.append(coordinates)
-            self.explore_paths(current_path[0:-1], explored)
+            self.explore_paths(current_path[0:-1])
 
     def get_next_coordinates(self, coordinates):
         def check_cell(y, x):
