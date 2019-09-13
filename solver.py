@@ -24,7 +24,6 @@ class Tree(object):
         self.target = target
 
         self.correct_paths = []
-        self.deadends = []
         self.forks = {}
 
         self.explore_paths([self.start])
@@ -84,25 +83,21 @@ class Tree(object):
                 cell = self.matrix[y][x]
             except IndexError:
                 return
-            if (
-                cell != '#'
-                and not (y, x) in self.deadends
-            ):
-
+            if cell != '#':
                 return (y, x)
 
         y, x = coordinates
-        next_coordinates_list = deque()
+        next_coordinates_queue = deque()
         for _y in (y - 1, y + 1):
             next_coordinates = check_cell(_y, x)
             if next_coordinates:
-                next_coordinates_list.append(next_coordinates)
+                next_coordinates_queue.append(next_coordinates)
         for _x in (x - 1, x + 1):
             next_coordinates = check_cell(y, _x)
             if next_coordinates:
-                next_coordinates_list.append(next_coordinates)
+                next_coordinates_queue.append(next_coordinates)
 
-        return next_coordinates_list
+        return next_coordinates_queue
 
     @property
     def shortest_path(self):
