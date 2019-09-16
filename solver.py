@@ -21,17 +21,18 @@ class Tree(object):
     Tree object building and containing paths.
     """
 
-    def __init__(self, matrix, start, target):
+    def __init__(self, maze, start, target):
         """
         Initiate instance attributes.
         """
-        self.matrix = matrix
+        self.maze = maze.strip()
         self.start = start
         self.target = target
 
         self.correct_paths = []
         self.forks = {}
 
+        self.matrix = self.create_matrix()
         self.explore_paths([self.start])
 
     def explore_paths(self, current_path):
@@ -133,6 +134,10 @@ class Tree(object):
 
         return next_coordinates_queue
 
+    def create_matrix(self):
+        """Create matrix from maze multi-line string."""
+        return [list(s) for s in re.split(r'\n', self.maze)]
+
     @property
     def shortest_path(self):
         return sorted(self.correct_paths, key=lambda l: len(l))[0]
@@ -140,17 +145,3 @@ class Tree(object):
     @property
     def longest_path(self):
         return sorted(self.correct_paths, key=lambda l: len(l))[-1]
-
-
-class MazeSolver(object):
-
-    def __init__(self, start, target, maze):
-        self.maze = maze.strip()
-        self.start = start
-        self.target = target
-
-        self.matrix = self.create_matrix()
-        self.tree = Tree(self.matrix, self.start, self.target)
-
-    def create_matrix(self):
-        return [list(s) for s in re.split(r'\n', self.maze)]
