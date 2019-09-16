@@ -1,5 +1,11 @@
 import re
 from collections import deque
+from typing import (
+    Deque,
+    Tuple,
+    List,
+    Dict,
+)
 
 maze = """
 ###########
@@ -21,7 +27,12 @@ class Tree(object):
     Tree object building and containing paths.
     """
 
-    def __init__(self, maze, start, target):
+    def __init__(
+        self,
+        maze: str,
+        start: Tuple[int, int],
+        target: Tuple[int, int]
+    ) -> None:
         """
         Initiate instance attributes.
         """
@@ -29,13 +40,13 @@ class Tree(object):
         self.start = start
         self.target = target
 
-        self.correct_paths = []
-        self.forks = {}
+        self.correct_paths: List = []
+        self.forks: Dict = {}
 
-        self.matrix = self.create_matrix()
+        self.matrix: List = self.create_matrix()
         self.explore_paths([self.start])
 
-    def explore_paths(self, current_path):
+    def explore_paths(self, current_path: List) -> None:
         """
         Explore possible paths from self.start to self.target.
 
@@ -74,10 +85,16 @@ class Tree(object):
             # backtrack to search for a new path
             self.backtrack(current_path)
 
-    def get_available(self, coordinates):
+    def get_available(
+        self,
+        coordinates: Tuple[int, int]
+    ) -> Tuple[Deque, Tuple[int, int]]:
         """
         Return next_coordinates and other available options for coordinates.
         """
+        available: Deque
+        next_coordinates: Tuple[int, int]
+
         if coordinates in self.forks:
             available = self.forks[coordinates]
             next_coordinates = available.popleft()
@@ -91,7 +108,7 @@ class Tree(object):
 
         return available, next_coordinates
 
-    def backtrack(self, current_path):
+    def backtrack(self, current_path: List) -> None:
         """
         Go back to previous available fork in current_path.
         """
@@ -104,7 +121,10 @@ class Tree(object):
             return
         self.explore_paths(current_path[0:index+1])
 
-    def get_next_coordinates(self, coordinates):
+    def get_next_coordinates(
+        self,
+        coordinates: Tuple[int, int]
+    ) -> Deque:
         """
         Get possible next coordinates for given coordinates.
         """
@@ -120,7 +140,7 @@ class Tree(object):
                 return (y, x)
 
         y, x = coordinates
-        next_coordinates_queue = deque()
+        next_coordinates_queue: Deque = deque()
 
         for _y in (y - 1, y + 1):
             next_coordinates = check_cell(_y, x)
@@ -134,14 +154,14 @@ class Tree(object):
 
         return next_coordinates_queue
 
-    def create_matrix(self):
+    def create_matrix(self) -> List:
         """Create matrix from maze multi-line string."""
         return [list(s) for s in re.split(r'\n', self.maze)]
 
     @property
-    def shortest_path(self):
+    def shortest_path(self) -> List:
         return sorted(self.correct_paths, key=lambda l: len(l))[0]
 
     @property
-    def longest_path(self):
+    def longest_path(self) -> List:
         return sorted(self.correct_paths, key=lambda l: len(l))[-1]
