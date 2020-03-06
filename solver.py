@@ -3,8 +3,8 @@ from collections import deque
 from typing import (
     Deque,
     Tuple,
+    Type,
     List,
-    Dict,
 )
 
 maze = """
@@ -22,29 +22,57 @@ maze = """
 """
 
 
-class Tree(object):
-    """
-    Tree object building and containing paths.
-    """
+class MazeContainer(object):
+    """Maze container."""
 
     def __init__(
         self,
-        maze: str,
-        start: Tuple[int, int],
-        target: Tuple[int, int]
+        maze: str
     ) -> None:
-        """
-        Initiate instance attributes.
-        """
+        """Initiate instance attributes."""
         self.maze = maze.strip()
-        self.start = start
-        self.target = target
-
-        self.correct_paths: List = []
-        self.forks: Dict = {}
 
         self.matrix: List = self.create_matrix()
-        self.explore_paths([self.start])
+
+    def create_matrix(self) -> List:
+        """Create matrix from maze multi-line string."""
+        return [list(s) for s in re.split(r'\n', self.maze)]
+
+
+class Tree(object):
+    """Maze path tree."""
+
+    def __init__(self):
+        """Initiate instance attributes."""
+        self.forks = {}
+        self.correct_paths: List = []
+
+    @property
+    def shortest_path(self) -> List:
+        return sorted(self.correct_paths, key=lambda l: len(l))[0]
+
+    @property
+    def longest_path(self) -> List:
+        return sorted(self.correct_paths, key=lambda l: len(l))[-1]
+
+
+class Solver(object):
+    """Maze explorer."""
+
+    def __init__(
+        self,
+        maze_str: str,
+        start: Tuple[int, int],
+        target: Tuple[int, int],
+        maze_class: Type[MazeContainer] = MazeContainer,
+        tree_class: Type[Tree] = Tree
+    ):
+        """Initialize solver."""
+        self.maze = maze_class(maze_str)
+        self.tree = tree_class()
+
+        self.start = start
+        self.target = target
 
     def explore_paths(self, current_path: List) -> None:
         """
@@ -78,7 +106,7 @@ class Tree(object):
         elif next_coordinates and next_coordinates == self.target:
             # save path and backtrack to start a new one
             current_path.append(next_coordinates)
-            self.correct_paths.append(current_path)
+            self.tree.correct_paths.append(current_path)
             self.backtrack(current_path)
 
         else:
@@ -95,16 +123,16 @@ class Tree(object):
         available: Deque
         next_coordinates: Tuple[int, int]
 
-        if coordinates in self.forks:
-            available = self.forks[coordinates]
+        if coordinates in self.tree.forks:
+            available = self.tree.forks[coordinates]
             next_coordinates = available.popleft()
             if not available:
-                del self.forks[coordinates]
+                del self.tree.forks[coordinates]
         else:
             available = self.get_next_coordinates(coordinates)
             next_coordinates = available.popleft()
             if available:
-                self.forks[coordinates] = available
+                self.tree.forks[coordinates] = available
 
         return available, next_coordinates
 
@@ -114,7 +142,7 @@ class Tree(object):
         """
         index = 0
         for c in reversed(current_path):
-            if c in self.forks:
+            if c in self.tree.forks:
                 index = current_path.index(c)
                 break
         if not index:
@@ -133,7 +161,7 @@ class Tree(object):
             Check if a cell in self.matrix is blocked or open.
             """
             try:
-                cell = self.matrix[y][x]
+                cell = self.maze.matrix[y][x]
             except IndexError:
                 return
             if cell != '#':
@@ -154,14 +182,3 @@ class Tree(object):
 
         return next_coordinates_queue
 
-    def create_matrix(self) -> List:
-        """Create matrix from maze multi-line string."""
-        return [list(s) for s in re.split(r'\n', self.maze)]
-
-    @property
-    def shortest_path(self) -> List:
-        return sorted(self.correct_paths, key=lambda l: len(l))[0]
-
-    @property
-    def longest_path(self) -> List:
-        return sorted(self.correct_paths, key=lambda l: len(l))[-1]
