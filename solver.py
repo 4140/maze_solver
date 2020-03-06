@@ -52,11 +52,19 @@ class Tree(object):
 
     @property
     def shortest_path(self) -> List:
-        return sorted(self.correct_paths, key=lambda l: len(l))[0]
+        """Return longest path or one of multiple longest."""
+        if self.correct_paths:
+            return sorted(self.correct_paths, key=lambda l: len(l))[0]
+        else:
+            return []
 
     @property
     def longest_path(self) -> List:
-        return sorted(self.correct_paths, key=lambda l: len(l))[-1]
+        """Return shortest path or one of multiple shortest."""
+        if self.correct_paths:
+            return sorted(self.correct_paths, key=lambda l: len(l))[-1]
+        else:
+            return []
 
 
 class Solver(object):
@@ -76,6 +84,18 @@ class Solver(object):
 
         self.start = start
         self.target = target
+
+    def solve(self) -> None:
+        """Solve maze."""
+        self.explore_paths([self.start])
+
+        correct_paths_count = len(self.tree.correct_paths)
+        print(f"{correct_paths_count} correct paths found")
+        if correct_paths_count > 1:
+            print(f"Shortest path: {self.tree.shortest_path}")
+            print(f"Longest path: {self.tree.longest_path}")
+        elif correct_paths_count == 1:
+            print(f"Correct path: {self.tree.correct_paths[0]}")
 
     def explore_paths(self, current_path: List) -> None:
         """
