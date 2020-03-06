@@ -22,6 +22,8 @@ maze = """
 ###########
 """
 
+Coordinates = Tuple[int, int]
+
 
 class MazeContainer(object):
     """Maze container."""
@@ -63,8 +65,8 @@ class Solver(object):
     def __init__(
         self,
         maze_str: str,
-        start: Tuple[int, int],
-        target: Tuple[int, int],
+        start: Coordinates,
+        target: Coordinates,
         maze_class: Type[MazeContainer] = MazeContainer,
         tree_class: Type[Tree] = Tree
     ):
@@ -116,13 +118,13 @@ class Solver(object):
 
     def get_available(
         self,
-        coordinates: Tuple[int, int]
-    ) -> Tuple[Deque, Tuple[int, int]]:
+        coordinates: Coordinates
+    ) -> Tuple[Deque, Coordinates]:
         """
         Return next_coordinates and other available options for coordinates.
         """
         available: Deque
-        next_coordinates: Tuple[int, int]
+        next_coordinates: Coordinates
 
         if coordinates in self.tree.forks:
             available = self.tree.forks[coordinates]
@@ -152,7 +154,7 @@ class Solver(object):
 
     def get_next_coordinates(
         self,
-        coordinates: Tuple[int, int]
+        coordinates: Coordinates
     ) -> Deque:
         """
         Get possible next coordinates for given coordinates.
@@ -172,7 +174,7 @@ class Solver(object):
 
         return next_coordinates_queue
 
-    def _check_cell(self, y: int, x: int) -> Optional[Tuple[int, int]]:
+    def _check_cell(self, y: int, x: int) -> Optional[Coordinates]:
         """Check if a cell in self.matrix is blocked or open."""
         try:
             cell = self.maze.matrix[y][x]
@@ -180,4 +182,3 @@ class Solver(object):
             return
         if cell != '#':
             return (y, x)
-
