@@ -5,6 +5,7 @@ from typing import (
     Tuple,
     Type,
     List,
+    Optional,
 )
 
 maze = """
@@ -156,29 +157,27 @@ class Solver(object):
         """
         Get possible next coordinates for given coordinates.
         """
-        def check_cell(y, x):
-            """
-            Check if a cell in self.matrix is blocked or open.
-            """
-            try:
-                cell = self.maze.matrix[y][x]
-            except IndexError:
-                return
-            if cell != '#':
-                return (y, x)
-
         y, x = coordinates
         next_coordinates_queue: Deque = deque()
 
         for _y in (y - 1, y + 1):
-            next_coordinates = check_cell(_y, x)
+            next_coordinates = self._check_cell(_y, x)
             if next_coordinates:
                 next_coordinates_queue.append(next_coordinates)
 
         for _x in (x - 1, x + 1):
-            next_coordinates = check_cell(y, _x)
+            next_coordinates = self._check_cell(y, _x)
             if next_coordinates:
                 next_coordinates_queue.append(next_coordinates)
 
         return next_coordinates_queue
+
+    def _check_cell(self, y: int, x: int) -> Optional[Tuple[int, int]]:
+        """Check if a cell in self.matrix is blocked or open."""
+        try:
+            cell = self.maze.matrix[y][x]
+        except IndexError:
+            return
+        if cell != '#':
+            return (y, x)
 
